@@ -3,6 +3,7 @@ import './scss/styles.scss';
 import {AuctionAPI} from "./components/AuctionAPI";
 import {API_URL, CDN_URL} from "./utils/constants";
 import {EventEmitter} from "./components/base/events";
+import { ensureElement } from './utils/utils';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
@@ -13,7 +14,16 @@ events.onAll(({ eventName, data }) => {
 })
 
 // Все шаблоны
-
+const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card');
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#preview');
+const auctionTemplate = ensureElement<HTMLTemplateElement>('#auction');
+const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#bid');
+const bidsTemplate = ensureElement<HTMLTemplateElement>('#bids');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const tabsTemplate = ensureElement<HTMLTemplateElement>('#tabs');
+const soldTemplate = ensureElement<HTMLTemplateElement>('#sold');
+const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
+const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 // Модель данных приложения
 
