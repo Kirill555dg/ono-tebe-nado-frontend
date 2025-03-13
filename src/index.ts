@@ -3,15 +3,18 @@ import './scss/styles.scss';
 import { AuctionAPI } from "./components/AuctionAPI";
 import { API_URL, CDN_URL } from "./utils/constants";
 import { EventEmitter } from "./components/base/events";
-import { cloneTemplate, ensureElement } from './utils/utils';
+import { cloneTemplate, createElement, ensureElement } from './utils/utils';
 import AppState from './components/model/AppState';
 import { Modal } from './components/common/Modal';
 import Page from './components/view/Page';
 import Basket from './components/common/Basket';
 import Tabs from './components/common/Tabs';
 import Order from './components/view/Order';
-import { CatalogChangeEvent } from './components/model/LotItem';
-import { CatalogItem } from './components/view/Card';
+import LotItem, { CatalogChangeEvent } from './components/model/LotItem';
+import { AuctionItem, BidItem, CatalogItem } from './components/view/Card';
+import { Auction } from './components/view/Auction';
+import Success from './components/view/Success';
+import { IOrderForm } from './types';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
@@ -75,6 +78,185 @@ events.on<CatalogChangeEvent>('items:changed', () => {
   page.counter = appData.getClosedLots().length;
 });
 
+// Открыть лот
+events.on('card:select', (item: LotItem) => {
+  appData.setPreview(item);
+});
+
+// Открыть форму заказа
+events.on('order:open', () => {
+  modal.render({
+    content: order.render({
+      phone: '',
+      email: '',
+      valid: false,
+      errors: []
+    })
+  });
+});
+
+// Изменилось одно из полей
+events.on(/^order\..*:change/, (data: { field: keyof IOrderForm, value: string }) => {
+  appData.setOrderField(data.field, data.value);
+});
+
+// Изменилось состояние валидации формы
+events.on('formErrors:change', (errors: Partial<IOrderForm>) => {
+  const { email, phone } = errors;
+  order.valid = !email && !phone;
+  order.errors = Object.values({ phone, email }).filter(i => !!i).join('; ');
+});
+
+// Отправлена форма заказа
+events.on('order:submit', () => {
+  api.orderLots(appData.order)
+    .then((result) => {
+      const success = new Success(cloneTemplate(successTemplate), {
+        onClick: () => {
+          modal.close();
+          appData.clearBasket();
+          events.emit('auction:changed');
+        }
+      });
+
+      modal.render({
+        content: success.render({})
+      });
+    })
+    .catch(err => {
+      console.error(err);
+    });
+});
+
+
+
+// Открыть активные лоты
+events.on('bids:open', () => {
+  modal.render({
+    content: createElement<HTMLElement>('div', {}, [
+      tabs.render({
+        selected: 'active'
+      }),
+      bids.render()
+    ])
+  });
+});
+
+// Открыть закрытые лоты
+events.on('basket:open', () => {
+  modal.render({
+    content: createElement<HTMLElement>('div', {}, [
+      tabs.render({
+        selected: 'closed'
+      }),
+      basket.render()
+    ])
+  });
+});
+
+// Изменения в лоте, пересчёт стоимости
+events.on('auction:changed', () => {
+  page.counter = appData.getClosedLots().length;
+  bids.items = appData.getActiveLots().map(item => {
+    const card = new BidItem(cloneTemplate(cardBasketTemplate), {
+      onClick: () => events.emit('preview:changed', item)
+    });
+    return card.render({
+      title: item.title,
+      image: item.image,
+      status: {
+        amount: item.price,
+        status: item.isMyBid
+      }
+    });
+  });
+  let total = 0;
+  basket.items = appData.getClosedLots().map(item => {
+    const card = new BidItem(cloneTemplate(soldTemplate), {
+      onClick: (event) => {
+        const checkbox = event.target as HTMLInputElement;
+        appData.toggleOrderedLot(item.id, checkbox.checked);
+        basket.total = appData.getTotal();
+        basket.selected = appData.order.items;
+      }
+    });
+    return card.render({
+      title: item.title,
+      image: item.image,
+      status: {
+        amount: item.price,
+        status: item.isMyBid
+      }
+    });
+  });
+  basket.selected = appData.order.items;
+  basket.total = total;
+})
+
+
+
+// Изменен открытый выбранный лот
+events.on('preview:changed', (item: LotItem) => {
+  const showItem = (item: LotItem) => {
+    const card = new AuctionItem(cloneTemplate(cardPreviewTemplate));
+    const auction = new Auction(cloneTemplate(auctionTemplate), {
+      onSubmit: (price) => {
+        item.placeBid(price);
+        auction.render({
+          status: item.status,
+          time: item.timeStatus,
+          label: item.auctionStatus,
+          nextBid: item.nextBid,
+          history: item.history
+        });
+      }
+    });
+
+    modal.render({
+      content: card.render({
+        title: item.title,
+        image: item.image,
+        description: item.description.split("\n"),
+        status: auction.render({
+          status: item.status,
+          time: item.timeStatus,
+          label: item.auctionStatus,
+          nextBid: item.nextBid,
+          history: item.history
+        })
+      })
+    });
+
+    if (item.status === 'active') {
+      auction.focus();
+    }
+  };
+
+  if (item) {
+    api.getLotItem(item.id)
+      .then((result) => {
+        item.description = result.description;
+        item.history = result.history;
+        showItem(item);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+  } else {
+    modal.close();
+  }
+});
+
+
+// Блокируем прокрутку страницы при открытии модалки
+events.on('modal:open', () => {
+  page.locked = true;
+});
+
+// Разблокируем прокрутку страницы при закрытии модалки
+events.on('modal:close', () => {
+  page.locked = false;
+});
 
 
 // Получаем лоты с сервера
