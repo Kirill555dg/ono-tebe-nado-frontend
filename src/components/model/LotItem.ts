@@ -32,8 +32,10 @@ export default class LotItem extends Model<ILot> {
 
     if (price > (this.minPrice * 10)) {
       this.status = 'closed';
+      this.datetime = dayjs(Date.now()).toString();
     }
     this.emitChanges('auction:changed', { id: this.id, price });
+    this.emitChanges('items:changed');
   }
 
   get isMyBid(): boolean {
