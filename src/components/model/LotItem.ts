@@ -4,7 +4,7 @@ import { Model } from "../base/Model";
 import { formatNumber } from "../../utils/utils";
 
 
-class LotItem extends Model<ILot> {
+export default class LotItem extends Model<ILot> {
     status: LotStatus;
     datetime: string;
     price: number;
