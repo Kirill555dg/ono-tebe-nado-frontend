@@ -13,8 +13,8 @@ import Order from './components/view/Order';
 import LotItem, { CatalogChangeEvent } from './components/model/LotItem';
 import { AuctionItem, BidItem, CatalogItem } from './components/view/Card';
 import { Auction } from './components/view/Auction';
-import Success from './components/view/Success';
 import { IOrderForm } from './types';
+import Plug from './components/view/Plug';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
@@ -35,6 +35,7 @@ const tabsTemplate = ensureElement<HTMLTemplateElement>('#tabs');
 const soldTemplate = ensureElement<HTMLTemplateElement>('#sold');
 const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
+const emptyTemplate = ensureElement<HTMLTemplateElement>('#empty');
 const modalTemplate = ensureElement<HTMLElement>('#modal-container');
 
 // Модель данных приложения
@@ -111,7 +112,7 @@ events.on('formErrors:change', (errors: Partial<IOrderForm>) => {
 events.on('order:submit', () => {
   api.orderLots(appData.order)
     .then((result) => {
-      const success = new Success(cloneTemplate(successTemplate), {
+      const success = new Plug(cloneTemplate(successTemplate), {
         onClick: () => {
           modal.close();
           appData.clearBasket();
@@ -144,6 +145,20 @@ events.on('bids:open', () => {
 
 // Открыть закрытые лоты
 events.on('basket:open', () => {
+  if (appData.getClosedLots().length === 0) {
+    const success = new Plug(cloneTemplate(emptyTemplate), {
+      onClick: () => {
+        modal.close();
+      }
+    });
+
+    modal.render({
+      content: success.render({})
+    });
+
+    return;
+  }
+
   modal.render({
     content: createElement<HTMLElement>('div', {}, [
       tabs.render({
