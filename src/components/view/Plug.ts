@@ -1,18 +1,18 @@
 import { ensureElement } from "../../utils/utils";
 import { Component } from "../base/Component";
 
-interface ISuccess {
+interface IPlug {
   total: number;
 }
 
-interface ISuccessActions {
+interface IPlugActions {
   onClick: () => void;
 }
 
-export default class Success extends Component<ISuccess> {
+export default class Plug extends Component<IPlug> {
   protected _close: HTMLElement;
 
-  constructor(container: HTMLElement, actions: ISuccessActions) {
+  constructor(container: HTMLElement, actions: IPlugActions) {
     super(container);
 
     this._close = ensureElement<HTMLElement>('.state__action', this.container);
