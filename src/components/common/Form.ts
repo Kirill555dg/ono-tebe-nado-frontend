@@ -4,7 +4,7 @@ import { ensureElement } from "../../utils/utils";
 
 interface IFormState {
   valid: boolean;
-  errors: string;
+  errors: string[];
 }
 
 export class Form<T> extends Component<IFormState> {
