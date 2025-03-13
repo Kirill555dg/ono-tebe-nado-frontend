@@ -3,6 +3,9 @@ import { ILot, LotStatus } from "../../types";
 import { Model } from "../base/Model";
 import { formatNumber } from "../../utils/utils";
 
+export type CatalogChangeEvent = {
+  catalog: LotItem[]
+};
 
 export default class LotItem extends Model<ILot> {
   status: LotStatus;
