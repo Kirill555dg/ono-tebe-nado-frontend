@@ -153,7 +153,12 @@ events.on('basket:open', () => {
     });
 
     modal.render({
-      content: success.render({})
+      content: createElement<HTMLElement>('div', {}, [
+        tabs.render({
+          selected: 'closed'
+        }),
+        success.render({})
+      ])
     });
 
     return;
@@ -189,10 +194,17 @@ events.on('auction:changed', () => {
   basket.items = appData.getClosedLots().map(item => {
     const card = new BidItem(cloneTemplate(soldTemplate), {
       onClick: (event) => {
-        const checkbox = event.target as HTMLInputElement;
-        appData.toggleOrderedLot(item.id, checkbox.checked);
-        basket.total = appData.getTotal();
-        basket.selected = appData.order.items;
+        if (
+          event.target instanceof HTMLLabelElement ||
+          event.target instanceof HTMLInputElement
+        ) {
+          const checkbox = event.target as HTMLInputElement;
+          appData.toggleOrderedLot(item.id, checkbox.checked);
+          basket.total = appData.getTotal();
+          basket.selected = appData.order.items;
+        } else {
+          events.emit('preview:changed', item);
+        }
       }
     });
     return card.render({
