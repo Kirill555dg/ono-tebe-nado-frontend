@@ -12,12 +12,11 @@
 
 	&__item {
 		padding: 1rem;
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		transition: background-color 0.3s ease, transform 0.3s ease;
+		border-radius: 40px;
+		transition: background-color 0.3s ease;
 
 		&:hover {
-			transform: scale(1.02);
+			background-color:#EFF0F3;
 		}
 	}
 
