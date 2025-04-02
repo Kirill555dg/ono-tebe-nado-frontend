@@ -3615,6 +3615,11 @@ path-to-regexp@0.1.7:
 path-type@^4.0.0:
   version "4.0.0"
 
+phone@^3.1.58:
+  version "3.1.58"
+  resolved "https://registry.npmjs.org/phone/-/phone-3.1.58.tgz"
+  integrity sha512-4R4qfXxNPpl08fxOH0qvTXTodQue0nCnAQP0OIu2i59TDq4QXM0dq/b7ODPNH93setqK5YdMSiMuce0RPsgu4w==
+
 picocolors@^1.0.0:
   version "1.0.0"
 

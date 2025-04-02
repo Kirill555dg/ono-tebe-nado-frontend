@@ -115,11 +115,10 @@ events.on('order:submit', () => {
       const success = new Plug(cloneTemplate(successTemplate), {
         onClick: () => {
           modal.close();
-          appData.clearBasket();
-          events.emit('auction:changed');
         }
       });
-
+      appData.clearBasket();
+      events.emit('auction:changed');
       modal.render({
         content: success.render({})
       });
@@ -146,7 +145,7 @@ events.on('bids:open', () => {
 // Открыть закрытые лоты
 events.on('basket:open', () => {
   if (appData.getClosedLots().length === 0) {
-    const success = new Plug(cloneTemplate(emptyTemplate), {
+    const empty = new Plug(cloneTemplate(emptyTemplate), {
       onClick: () => {
         modal.close();
       }
@@ -157,7 +156,7 @@ events.on('basket:open', () => {
         tabs.render({
           selected: 'closed'
         }),
-        success.render({})
+        empty.render({})
       ])
     });
 
